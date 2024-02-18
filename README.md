@@ -1,2 +1,6 @@
-# serilog-enrichers-aspnetcore-requestheader
-Serilog enrichers with correlationid 
+# Serilog Enrichers for AspNetCore 8
+
+Serilog enrichers for AspNetCore 8
+- RequestHeader
+  - CorrelationId
+  - TBC
