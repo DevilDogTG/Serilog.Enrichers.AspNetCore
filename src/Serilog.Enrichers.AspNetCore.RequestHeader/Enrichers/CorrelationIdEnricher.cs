@@ -7,34 +7,37 @@ namespace Serilog.Enrichers
     internal class CorrelationIdEnricher : ILogEventEnricher
     {
         private const string ItemKey = "Serilog_AspNetCoreRequestHeaderCorrelationId";
-        private const string PropertyName = "CorrelationId";
-        private readonly string _key;
-        private readonly bool _generatedToHeader;
-        private readonly string _generatedFormat;
-        private readonly IHttpContextAccessor _contextAccessor;
+        private readonly string propertyName;
+        private readonly string key;
+        private readonly bool generatedToHeader;
+        private readonly string generatedFormat;
+        private readonly IHttpContextAccessor contextAccessor;
 
         public CorrelationIdEnricher(
-            string key,
-            bool generatedToHeader,
-            string generatedNewIdFormat)
-            : this (key, generatedToHeader, generatedNewIdFormat, new HttpContextAccessor())
+            string _key,
+            string _propertyName,
+            bool _generatedToHeader,
+            string _generatedNewIdFormat)
+            : this (_key, _propertyName, _generatedToHeader, _generatedNewIdFormat, new HttpContextAccessor())
         { }
 
         internal CorrelationIdEnricher(
-            string key,
-            bool generatedToHeader,
-            string generatedNewIdFormat,
-            IHttpContextAccessor contextAccessor)
+            string _key,
+            string _propertyName,
+            bool _generatedToHeader,
+            string _generatedNewIdFormat,
+            IHttpContextAccessor _contextAccessor)
         {
-            _key = key;
-            _generatedToHeader = generatedToHeader;
-            _generatedFormat = generatedNewIdFormat;
-            _contextAccessor = contextAccessor;
+            key = _key;
+            propertyName = _propertyName;
+            generatedToHeader = _generatedToHeader;
+            generatedFormat = _generatedNewIdFormat;
+            contextAccessor = _contextAccessor;
         }
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            var httpContext = _contextAccessor.HttpContext;
+            var httpContext = contextAccessor.HttpContext;
             if (httpContext == null)
             { return; }
 
@@ -44,18 +47,18 @@ namespace Serilog.Enrichers
                 return;
             }
 
-            var header = httpContext.Request.Headers[_key].ToString();
+            var header = httpContext.Request.Headers[key].ToString();
             string correlationId = "";
             if (string.IsNullOrWhiteSpace(header))
             {
-                correlationId = Guid.NewGuid().ToString(_generatedFormat);
-                if (_generatedToHeader)
-                { httpContext.Request.Headers[_key] = correlationId; }
+                correlationId = Guid.NewGuid().ToString(generatedFormat);
+                if (generatedToHeader)
+                { httpContext.Request.Headers[key] = correlationId; }
             }
             else
             { correlationId = header; }
 
-            var correlationIdProperty = new LogEventProperty(PropertyName, new ScalarValue(correlationId));
+            var correlationIdProperty = new LogEventProperty(propertyName, new ScalarValue(correlationId));
             logEvent.AddOrUpdateProperty(correlationIdProperty);
 
             httpContext.Items.Add(ItemKey, correlationIdProperty);
